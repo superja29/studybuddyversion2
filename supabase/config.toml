@@ -1,0 +1,10 @@
+project_id = "ltbcmzpmgitofyvnbkcq"
+
+[functions.create-paypal-order]
+verify_jwt = false
+
+[functions.capture-paypal-order]
+verify_jwt = false
+
+[functions.create-whereby-room]
+verify_jwt = false
