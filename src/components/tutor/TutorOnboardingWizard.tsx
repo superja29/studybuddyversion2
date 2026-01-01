@@ -12,10 +12,11 @@ import { TutorAvailabilityManager } from "./TutorAvailabilityManager";
 
 interface TutorOnboardingWizardProps {
   tutorId: string;
+  userId: string;
   onComplete: () => void;
 }
 
-export function TutorOnboardingWizard({ tutorId, onComplete }: TutorOnboardingWizardProps) {
+export function TutorOnboardingWizard({ tutorId, userId, onComplete }: TutorOnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -47,13 +48,13 @@ export function TutorOnboardingWizard({ tutorId, onComplete }: TutorOnboardingWi
     }
   };
 
-  const uploadImage = async (file: File, path: string) => {
+  const uploadImage = async (file: File, type: string) => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${path}/${tutorId}-${Date.now()}.${fileExt}`;
-    
+    const fileName = `${userId}/${type}-${Date.now()}.${fileExt}`;
+
     const { error: uploadError } = await supabase.storage
       .from('tutor-images')
-      .upload(fileName, file);
+      .upload(fileName, file, { upsert: true });
 
     if (uploadError) throw uploadError;
 
@@ -159,7 +160,7 @@ export function TutorOnboardingWizard({ tutorId, onComplete }: TutorOnboardingWi
     try {
       const { error } = await supabase
         .from('tutors')
-        .update({ 
+        .update({
           education,
           certifications,
         })

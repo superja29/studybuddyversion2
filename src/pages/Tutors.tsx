@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
@@ -14,153 +16,6 @@ import {
   X,
 } from "lucide-react";
 
-const allTutors: TutorData[] = [
-  {
-    id: "1",
-    name: "María García",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop",
-    country: "España",
-    languages: ["Español", "Inglés"],
-    specialties: ["Conversación", "Negocios", "DELE"],
-    rating: 4.9,
-    totalReviews: 234,
-    totalClasses: 1520,
-    yearsExperience: 8,
-    hourlyRate: 25,
-    trialRate: 10,
-    bio: "Profesora nativa de español con más de 8 años de experiencia.",
-    isVerified: true,
-    isTopRated: true,
-    hasVideo: true,
-  },
-  {
-    id: "2",
-    name: "James Wilson",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-    country: "Estados Unidos",
-    languages: ["Inglés"],
-    specialties: ["TOEFL", "IELTS", "Pronunciación"],
-    rating: 4.8,
-    totalReviews: 189,
-    totalClasses: 980,
-    yearsExperience: 6,
-    hourlyRate: 30,
-    trialRate: 15,
-    bio: "Tutor certificado de inglés americano. Experto en TOEFL e IELTS.",
-    isVerified: true,
-    isTopRated: false,
-    hasVideo: true,
-  },
-  {
-    id: "3",
-    name: "Sophie Dubois",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
-    country: "Francia",
-    languages: ["Francés", "Inglés"],
-    specialties: ["Principiantes", "Conversación", "Cultura"],
-    rating: 5.0,
-    totalReviews: 156,
-    totalClasses: 720,
-    yearsExperience: 5,
-    hourlyRate: 28,
-    trialRate: 12,
-    bio: "Tutora parisina apasionada por compartir el francés y la cultura.",
-    isVerified: true,
-    isTopRated: true,
-    hasVideo: true,
-  },
-  {
-    id: "4",
-    name: "Lucas Oliveira",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-    country: "Brasil",
-    languages: ["Portugués", "Español"],
-    specialties: ["Brasileño", "Conversación", "Música"],
-    rating: 4.9,
-    totalReviews: 98,
-    totalClasses: 450,
-    yearsExperience: 4,
-    hourlyRate: 20,
-    trialRate: 8,
-    bio: "Aprende portugués brasileño de forma divertida con música.",
-    isVerified: true,
-    isTopRated: false,
-    hasVideo: true,
-  },
-  {
-    id: "5",
-    name: "Yuki Tanaka",
-    avatar: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop",
-    country: "Japón",
-    languages: ["Japonés", "Inglés"],
-    specialties: ["JLPT", "Anime/Manga", "Negocios"],
-    rating: 4.8,
-    totalReviews: 167,
-    totalClasses: 890,
-    yearsExperience: 7,
-    hourlyRate: 32,
-    trialRate: 14,
-    bio: "Profesora nativa de japonés. Especializada en JLPT y cultura pop.",
-    isVerified: true,
-    isTopRated: true,
-    hasVideo: true,
-  },
-  {
-    id: "6",
-    name: "Hans Müller",
-    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop",
-    country: "Alemania",
-    languages: ["Alemán", "Inglés"],
-    specialties: ["Negocios", "Goethe", "Técnico"],
-    rating: 4.7,
-    totalReviews: 123,
-    totalClasses: 670,
-    yearsExperience: 9,
-    hourlyRate: 35,
-    trialRate: 15,
-    bio: "Profesor de alemán especializado en negocios y lenguaje técnico.",
-    isVerified: true,
-    isTopRated: false,
-    hasVideo: true,
-  },
-  {
-    id: "7",
-    name: "Isabella Romano",
-    avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop",
-    country: "Italia",
-    languages: ["Italiano", "Español"],
-    specialties: ["Conversación", "Cocina", "Arte"],
-    rating: 4.9,
-    totalReviews: 145,
-    totalClasses: 560,
-    yearsExperience: 5,
-    hourlyRate: 26,
-    trialRate: 11,
-    bio: "Italiana apasionada por enseñar el idioma a través de la cultura.",
-    isVerified: true,
-    isTopRated: true,
-    hasVideo: true,
-  },
-  {
-    id: "8",
-    name: "Chen Wei",
-    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
-    country: "China",
-    languages: ["Chino", "Inglés"],
-    specialties: ["HSK", "Mandarín", "Negocios"],
-    rating: 4.8,
-    totalReviews: 178,
-    totalClasses: 920,
-    yearsExperience: 8,
-    hourlyRate: 28,
-    trialRate: 12,
-    bio: "Profesor experimentado de chino mandarín para todos los niveles.",
-    isVerified: true,
-    isTopRated: false,
-    hasVideo: true,
-  },
-];
-
 const languages = ["Todos", "Inglés", "Español", "Francés", "Portugués", "Japonés", "Alemán", "Italiano", "Chino"];
 const priceRanges = ["Todos los precios", "$10-20/h", "$20-30/h", "$30+/h"];
 
@@ -170,8 +25,39 @@ export default function Tutors() {
   const [selectedLanguage, setSelectedLanguage] = useState("Todos");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Fetch tutors from Supabase
+  const { data: allTutors = [] } = useQuery({
+    queryKey: ["tutors"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tutors")
+        .select("*");
+      
+      if (error) throw error;
+
+      return data.map((t): TutorData => ({
+        id: t.id,
+        name: t.name,
+        avatar: t.avatar_url || "",
+        country: t.location || "Unknown",
+        languages: t.languages || [],
+        specialties: t.specialties || [],
+        rating: Number(t.rating) || 0,
+        totalReviews: t.total_students || 0,
+        totalClasses: t.total_lessons || 0,
+        yearsExperience: 1,
+        hourlyRate: Number(t.hourly_rate),
+        trialRate: Number(t.trial_rate),
+        bio: t.bio || "",
+        isVerified: t.is_verified || false,
+        isTopRated: Number(t.rating) > 4.8,
+        hasVideo: !!t.video_url,
+      }));
+    },
+  });
+
   // Get all tutor IDs for presence tracking
-  const tutorIds = useMemo(() => allTutors.map(t => t.id), []);
+  const tutorIds = useMemo(() => allTutors?.map((t) => t.id) || [], [allTutors]);
   const { onlineTutors, lastOnlineTimes } = useTutorsOnlineStatus(tutorIds);
 
   const filteredTutors = allTutors.filter((tutor) => {

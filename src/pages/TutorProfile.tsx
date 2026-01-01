@@ -3,8 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { 
-  Star, Award, Clock, Video, Heart, MapPin, 
+import {
+  Star, Award, Clock, Video, Heart, MapPin,
   MessageCircle, Calendar, ChevronLeft, Play,
   GraduationCap, Globe, CheckCircle, Users
 } from "lucide-react";
@@ -23,86 +23,118 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTutorOnlineStatus } from "@/hooks/useTutorPresence";
 import { supabase } from "@/integrations/supabase/client";
 
-// Mock tutor data - in real app this would come from API
-const mockTutor = {
-  id: "1",
-  name: "María García López",
-  avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-  coverImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=400&fit=crop",
-  country: "España",
-  city: "Madrid",
-  languages: ["Español", "Inglés", "Francés"],
-  nativeLanguage: "Español",
-  specialties: ["Conversación", "Gramática", "Preparación DELE", "Español para negocios", "Pronunciación"],
-  rating: 4.9,
-  totalReviews: 248,
-  totalClasses: 1250,
-  totalStudents: 89,
-  yearsExperience: 8,
-  hourlyRate: 25,
-  trialRate: 10,
-  responseTime: "< 1 hora",
-  bio: "¡Hola! Soy María, profesora nativa de español con más de 8 años de experiencia enseñando a estudiantes de todo el mundo. Mi pasión es ayudarte a dominar el español de manera natural y divertida.",
-  fullBio: `¡Hola! Soy María, profesora nativa de español con más de 8 años de experiencia enseñando a estudiantes de todo el mundo.
 
-Mi enfoque se centra en la comunicación práctica. Creo firmemente que la mejor manera de aprender un idioma es usándolo, por eso mis clases están diseñadas para que hables desde el primer día.
 
-🎯 Mi metodología:
-- Clases personalizadas según tus objetivos y nivel
-- Material didáctico propio y actualizado
-- Práctica de conversación real con temas que te interesan
-- Corrección constructiva de errores
-- Tareas opcionales para reforzar lo aprendido
 
-📚 Mi formación:
-- Licenciatura en Filología Hispánica (Universidad Complutense de Madrid)
-- Máster en Enseñanza de Español como Lengua Extranjera
-- Certificación ELE del Instituto Cervantes
-- Formación continua en nuevas metodologías pedagógicas
+// Helper function to convert YouTube URLs to embed format
+const getEmbedUrl = (url: string) => {
+  if (!url) return "";
 
-💼 Mi experiencia:
-He trabajado con estudiantes de más de 40 países diferentes, desde principiantes absolutos hasta niveles avanzados. También tengo experiencia preparando estudiantes para exámenes oficiales DELE y SIELE, con una tasa de aprobación del 95%.
+  // Handle standard YouTube URLs
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
 
-¡Reserva una clase de prueba y empezamos juntos tu viaje hacia el español!`,
-  isVerified: true,
-  isTopRated: true,
-  hasVideo: true,
-  videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-  education: [
-    "Máster en ELE - Universidad de Barcelona (2018)",
-    "Licenciatura en Filología Hispánica - UCM Madrid (2015)"
-  ],
-  certifications: [
-    "Certificación ELE - Instituto Cervantes",
-    "DELE Examiner Certification",
-    "TEFL Certificate"
-  ]
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}`;
+  }
+
+  // Return original URL if it's already an embed link or another provider
+  return url;
 };
 
 export default function TutorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const tutor = mockTutor; // In real app, fetch based on id
-  
-  // Use the tutor ID from URL params, fallback to mock ID
-  const tutorId = id || tutor.id;
-  const { isFavorite, toggling, toggleFavorite } = useFavorite(tutorId);
-  const { isOnline, lastOnlineAt } = useTutorOnlineStatus(tutorId);
+  const [tutor, setTutor] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Use the tutor ID from URL params
+  const tutorId = id;
+  const { isFavorite, toggling, toggleFavorite } = useFavorite(tutorId || "");
+  const { isOnline, lastOnlineAt } = useTutorOnlineStatus(tutorId || "");
+
+  useEffect(() => {
+    async function fetchTutor() {
+      if (!tutorId) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("tutors")
+          .select("*")
+          .eq("id", tutorId)
+          .single();
+
+        if (error) throw error;
+
+        // Transform Supabase data to match component structure if needed
+        // For now, we mix real data with some mock fallbacks for missing columns
+        setTutor({
+          ...data,
+          // Map DB columns to component expected fields
+          avatar: data.avatar_url,
+          coverImage: data.cover_image_url || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200",
+          country: data.location?.split(',')[1]?.trim() || "Ubicación desconocida",
+          city: data.location?.split(',')[0]?.trim() || "",
+          languages: data.languages || [],
+          specialties: data.specialties || [],
+          rating: data.rating || 5.0,
+          totalReviews: 0, // Need to implement reviews count
+          totalClasses: data.total_lessons || 0,
+          totalStudents: data.total_students || 0,
+          yearsExperience: 1, // Default or add to DB
+          hourlyRate: data.hourly_rate,
+          trialRate: data.trial_rate,
+          responseTime: data.response_time || "< 1 hora",
+          bio: data.bio || "",
+          fullBio: data.bio || "", // Use bio for both for now
+          isVerified: data.is_verified,
+          isTopRated: (data.rating || 0) > 4.8,
+          hasVideo: !!data.video_url,
+          videoUrl: data.video_url,
+          education: data.education || [],
+          certifications: data.certifications || []
+        });
+      } catch (error) {
+        console.error("Error fetching tutor:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTutor();
+  }, [tutorId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!tutor) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Tutor no encontrado</h1>
+        <Button onClick={() => navigate("/tutors")}>Volver a la lista</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       {/* Cover Image */}
       <div className="relative h-48 md:h-64 overflow-hidden">
-        <img 
-          src={tutor.coverImage} 
-          alt="Cover" 
+        <img
+          src={tutor.coverImage}
+          alt="Cover"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        
+
         <Button
           variant="ghost"
           size="sm"
@@ -207,8 +239,8 @@ export default function TutorProfile() {
 
                     {/* Quick Actions - Mobile */}
                     <div className="flex gap-2 md:hidden justify-center">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="icon"
                         onClick={toggleFavorite}
                         disabled={toggling}
@@ -216,8 +248,8 @@ export default function TutorProfile() {
                       >
                         <Heart className={`w-4 h-4 ${isFavorite ? "fill-coral" : ""}`} />
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="icon"
                         onClick={() => navigate(`/messages?tutor=${tutor.id}`)}
                       >
@@ -248,7 +280,7 @@ export default function TutorProfile() {
                   <CardContent className="p-0">
                     <div className="aspect-video w-full">
                       <iframe
-                        src={tutor.videoUrl}
+                        src={getEmbedUrl(tutor.videoUrl)}
                         title={`Video de presentación de ${tutor.name}`}
                         className="w-full h-full"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -343,8 +375,8 @@ export default function TutorProfile() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                           {tutor.education.map((edu, index) => (
-                            <motion.div 
-                              key={index} 
+                            <motion.div
+                              key={index}
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.1 }}
@@ -374,15 +406,15 @@ export default function TutorProfile() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {tutor.certifications.map((cert, index) => (
-                            <motion.div 
-                              key={index} 
+                            <motion.div
+                              key={index}
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.1 }}
                               className="group"
                             >
-                              <Badge 
-                                variant="outline" 
+                              <Badge
+                                variant="outline"
                                 className="w-full justify-start gap-2 py-3 px-4 text-sm font-normal hover:bg-accent/10 transition-colors cursor-default"
                               >
                                 <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
@@ -415,14 +447,14 @@ export default function TutorProfile() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <BookingWidget 
+                <BookingWidget
                   tutor={{
                     id: tutor.id,
                     name: tutor.name,
                     hourlyRate: tutor.hourlyRate,
                     trialRate: tutor.trialRate,
                     responseTime: tutor.responseTime
-                  }} 
+                  }}
                 />
 
                 {/* Quick Stats Card */}
@@ -445,8 +477,8 @@ export default function TutorProfile() {
 
                 {/* Contact Buttons - Desktop */}
                 <div className="hidden md:flex gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className={`flex-1 gap-2 ${isFavorite ? "text-coral border-coral" : ""}`}
                     onClick={toggleFavorite}
                     disabled={toggling}
@@ -454,8 +486,8 @@ export default function TutorProfile() {
                     <Heart className={`w-4 h-4 ${isFavorite ? "fill-coral" : ""}`} />
                     {isFavorite ? "Guardado" : "Favorito"}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="flex-1 gap-2"
                     onClick={() => navigate(`/messages?tutor=${tutor.id}`)}
                   >

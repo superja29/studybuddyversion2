@@ -28,7 +28,7 @@ const tutorAuthSchema = z.object({
 type TutorAuthFormValues = z.infer<typeof tutorAuthSchema>;
 
 const SUGGESTED_LANGUAGES = [
-  "Español", "Inglés", "Francés", "Alemán", "Italiano", 
+  "Español", "Inglés", "Francés", "Alemán", "Italiano",
   "Portugués", "Chino Mandarín", "Japonés", "Coreano", "Árabe"
 ];
 
@@ -90,7 +90,7 @@ export default function TutorAuth() {
   const handleNextStep = async () => {
     const emailValid = await form.trigger("email");
     const passwordValid = await form.trigger("password");
-    
+
     if (emailValid && passwordValid) {
       setStep("profile");
     }
@@ -127,9 +127,8 @@ export default function TutorAuth() {
         throw new Error("No se pudo crear la cuenta");
       }
 
-      // 2. Create tutor profile
-      const { error: tutorError } = await supabase.from("tutors").insert({
-        user_id: authData.user.id,
+      // 2. Create tutor profile and role via RPC
+      const { error: tutorError } = await supabase.rpc("become_tutor", {
         name: data.name,
         location: data.location,
         bio: data.bio,
@@ -140,16 +139,6 @@ export default function TutorAuth() {
       });
 
       if (tutorError) throw tutorError;
-
-      // 3. Add tutor role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        role: "tutor" as const,
-      });
-
-      if (roleError && !roleError.message.includes("duplicate")) {
-        console.error("Error adding tutor role:", roleError);
-      }
 
       toast.success("¡Cuenta de tutor creada exitosamente!");
       navigate("/tutor-dashboard");
@@ -178,7 +167,7 @@ export default function TutorAuth() {
           <p className="text-muted-foreground">
             Crea tu cuenta y perfil de tutor en un solo paso
           </p>
-          
+
           {/* Progress indicator */}
           <div className="flex items-center justify-center gap-2 mt-6">
             <div className={`w-3 h-3 rounded-full ${step === "credentials" ? "bg-primary" : "bg-primary/30"}`} />
@@ -230,11 +219,11 @@ export default function TutorAuth() {
                         <FormControl>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input 
-                              className="pl-10 pr-10" 
-                              placeholder="••••••••" 
-                              type={showPassword ? "text" : "password"} 
-                              {...field} 
+                            <Input
+                              className="pl-10 pr-10"
+                              placeholder="••••••••"
+                              type={showPassword ? "text" : "password"}
+                              {...field}
                             />
                             <button
                               type="button"

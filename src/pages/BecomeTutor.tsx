@@ -30,7 +30,7 @@ const tutorFormSchema = z.object({
 type TutorFormValues = z.infer<typeof tutorFormSchema>;
 
 const SUGGESTED_LANGUAGES = [
-  "Español", "Inglés", "Francés", "Alemán", "Italiano", 
+  "Español", "Inglés", "Francés", "Alemán", "Italiano",
   "Portugués", "Chino Mandarín", "Japonés", "Coreano", "Árabe"
 ];
 
@@ -109,8 +109,7 @@ export default function BecomeTutor() {
         return;
       }
 
-      const { error } = await supabase.from("tutors").insert({
-        user_id: user.id,
+      const { error } = await supabase.rpc("become_tutor", {
         name: data.name,
         location: data.location,
         bio: data.bio,
@@ -121,16 +120,6 @@ export default function BecomeTutor() {
       });
 
       if (error) throw error;
-
-      // Add tutor role to user
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: user.id,
-        role: "tutor" as const,
-      });
-
-      if (roleError && !roleError.message.includes("duplicate")) {
-        console.error("Error adding tutor role:", roleError);
-      }
 
       setSuccess(true);
       toast.success("¡Tu perfil de tutor ha sido creado!");
@@ -163,7 +152,7 @@ export default function BecomeTutor() {
             <p className="text-xl text-muted-foreground mb-8">
               Comparte tu conocimiento, establece tu horario y gana dinero enseñando a estudiantes de todo el mundo.
             </p>
-            
+
             <div className="grid md:grid-cols-3 gap-6 mb-10">
               <Card className="p-6 text-center">
                 <Globe className="w-10 h-10 mx-auto text-primary mb-3" />

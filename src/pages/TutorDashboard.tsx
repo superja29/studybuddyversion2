@@ -2,17 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { TutorAvailabilityManager } from "@/components/tutor/TutorAvailabilityManager";
 import { TutorBookingsList } from "@/components/tutor/TutorBookingsList";
 import { TutorStats } from "@/components/tutor/TutorStats";
-import { TutorImageUpload } from "@/components/tutor/TutorImageUpload";
-import { TutorProfileEditor } from "@/components/tutor/TutorProfileEditor";
 import { TutorOnboardingWizard } from "@/components/tutor/TutorOnboardingWizard";
 import { useTutorPresenceBroadcast } from "@/hooks/useTutorPresence";
-import { Clock, BookOpen, Loader2, ImageIcon, UserCog } from "lucide-react";
+import { BookOpen, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
 
 type Tutor = Tables<"tutors">;
@@ -26,6 +23,12 @@ export default function TutorDashboard() {
 
   // Broadcast presence when tutor is online
   useTutorPresenceBroadcast(tutor?.id || null);
+
+  useEffect(() => {
+    if (!loading && !tutor && user) {
+      navigate("/student-dashboard");
+    }
+  }, [loading, tutor, user, navigate]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -52,19 +55,19 @@ export default function TutorDashboard() {
     }
 
     setTutor(data);
-    
+
     // Check if tutor needs onboarding (no avatar, no availability set)
     if (data && !data.avatar_url) {
       const { count } = await supabase
         .from("tutor_availability")
         .select("*", { count: "exact", head: true })
         .eq("tutor_id", data.id);
-      
+
       if (count === 0) {
         setShowOnboarding(true);
       }
     }
-    
+
     setLoading(false);
   };
 
@@ -76,11 +79,8 @@ export default function TutorDashboard() {
     );
   }
 
-  useEffect(() => {
-    if (!loading && !tutor && user) {
-      navigate("/student-dashboard");
-    }
-  }, [loading, tutor, user, navigate]);
+
+
 
   if (!tutor) {
     return (
@@ -90,9 +90,10 @@ export default function TutorDashboard() {
     );
   }
 
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
-    fetchTutorProfile();
+    await fetchTutorProfile();
+    toast.success("¡Tu perfil está completo y visible!");
   };
 
   if (showOnboarding && tutor) {
@@ -100,9 +101,10 @@ export default function TutorDashboard() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="container mx-auto px-4 py-24">
-          <TutorOnboardingWizard 
-            tutorId={tutor.id} 
-            onComplete={handleOnboardingComplete} 
+          <TutorOnboardingWizard
+            tutorId={tutor.id}
+            userId={user!.id}
+            onComplete={handleOnboardingComplete}
           />
         </main>
         <Footer />
@@ -125,49 +127,13 @@ export default function TutorDashboard() {
 
         <TutorStats tutorId={tutor.id} />
 
-        <Tabs defaultValue="profile" className="mt-8">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <UserCog className="w-4 h-4" />
-              Perfil
-            </TabsTrigger>
-            <TabsTrigger value="availability" className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Disponibilidad
-            </TabsTrigger>
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Reservas
-            </TabsTrigger>
-            <TabsTrigger value="images" className="flex items-center gap-2">
-              <ImageIcon className="w-4 h-4" />
-              Imágenes
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="profile" className="mt-6">
-            <TutorProfileEditor tutor={tutor} onProfileUpdated={fetchTutorProfile} />
-          </TabsContent>
-
-          <TabsContent value="availability" className="mt-6">
-            <TutorAvailabilityManager tutorId={tutor.id} />
-          </TabsContent>
-
-          <TabsContent value="bookings" className="mt-6">
-            <TutorBookingsList tutorId={tutor.id} />
-          </TabsContent>
-
-          <TabsContent value="images" className="mt-6">
-            <TutorImageUpload
-              tutorId={tutor.id}
-              userId={user!.id}
-              currentAvatarUrl={tutor.avatar_url}
-              currentCoverUrl={tutor.cover_image_url}
-              tutorName={tutor.name}
-              onImagesUpdated={fetchTutorProfile}
-            />
-          </TabsContent>
-        </Tabs>
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <BookOpen className="w-5 h-5" />
+            Próximas Reservas
+          </h2>
+          <TutorBookingsList tutorId={tutor.id} />
+        </div>
       </main>
       <Footer />
     </div>

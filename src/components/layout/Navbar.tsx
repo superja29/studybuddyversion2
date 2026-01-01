@@ -3,11 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Menu, X, Globe, User, LogOut, Calendar, MessageSquare, LayoutDashboard, CreditCard, UserCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { Badge } from "@/components/ui/badge";
 import { AuthDialog } from "@/components/auth/AuthDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export function Navbar() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
@@ -16,6 +17,25 @@ export function Navbar() {
   const { user, signOut } = useAuth();
   const unreadCount = useUnreadMessages();
   const navigate = useNavigate();
+  const [isTutor, setIsTutor] = useState(false);
+
+  useEffect(() => {
+    const checkTutorStatus = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from("tutors")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        setIsTutor(!!data);
+      } else {
+        setIsTutor(false);
+      }
+    };
+
+    checkTutorStatus();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,31 +94,65 @@ export function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate("/student-dashboard")}>
-                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                    Mi Panel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/bookings")}>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Mis Reservas
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/messages")} className="relative">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Mensajes
-                    {unreadCount > 0 && (
-                      <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-xs">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </Badge>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/payments")}>
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Mis Pagos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/student-profile")}>
-                    <UserCircle className="w-4 h-4 mr-2" />
-                    Mi Perfil
-                  </DropdownMenuItem>
+                  {isTutor ? (
+                    // Tutor Menu
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/tutor-dashboard")}>
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        Mi Panel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/tutor/profile")}>
+                        <UserCircle className="w-4 h-4 mr-2" />
+                        Mi Perfil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/tutor/availability")}>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Disponibilidad
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/tutor/images")}>
+                        <User className="w-4 h-4 mr-2" />
+                        Imágenes
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/messages")} className="relative">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Mensajes
+                        {unreadCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-xs">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </Badge>
+                        )}
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    // Student Menu
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/student-dashboard")}>
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        Mi Panel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/bookings")}>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Mis Reservas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/messages")} className="relative">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Mensajes
+                        {unreadCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1.5 text-xs">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </Badge>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/payments")}>
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Mis Pagos
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/student-profile")}>
+                        <UserCircle className="w-4 h-4 mr-2" />
+                        Mi Perfil
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="w-4 h-4 mr-2" />

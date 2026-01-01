@@ -13,6 +13,9 @@ import Bookings from "./pages/Bookings";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentProfile from "./pages/StudentProfile";
+import TutorMyProfile from "./pages/TutorMyProfile";
+import TutorAvailability from "./pages/TutorAvailability";
+import TutorImages from "./pages/TutorImages";
 import PaymentHistoryPage from "./pages/PaymentHistoryPage";
 import BecomeTutor from "./pages/BecomeTutor";
 import Messages from "./pages/Messages";
@@ -39,6 +42,9 @@ const App = () => (
             <Route path="/payments" element={<PaymentHistoryPage />} />
             <Route path="/become-tutor" element={<BecomeTutor />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/tutor/profile" element={<TutorMyProfile />} />
+            <Route path="/tutor/availability" element={<TutorAvailability />} />
+            <Route path="/tutor/images" element={<TutorImages />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

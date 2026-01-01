@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -63,6 +63,17 @@ export function TutorProfileEditor({ tutor, onProfileUpdated }: TutorProfileEdit
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      name: tutor.name,
+      bio: tutor.bio || "",
+      location: tutor.location || "",
+      hourly_rate: Number(tutor.hourly_rate),
+      trial_rate: tutor.trial_rate ? Number(tutor.trial_rate) : undefined,
+      video_url: (tutor as any).video_url || "",
+    });
+  }, [tutor, form]);
+
   const addLanguage = () => {
     const lang = newLanguage.trim();
     if (lang && !languages.includes(lang)) {
@@ -113,6 +124,7 @@ export function TutorProfileEditor({ tutor, onProfileUpdated }: TutorProfileEdit
 
   const onSubmit = async (data: ProfileFormValues) => {
     setSaving(true);
+    console.log("Submitting profile update:", data);
     try {
       const { error } = await supabase
         .from("tutors")
@@ -130,8 +142,12 @@ export function TutorProfileEditor({ tutor, onProfileUpdated }: TutorProfileEdit
         })
         .eq("id", tutor.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase update error:", error);
+        throw error;
+      }
 
+      console.log("Profile updated successfully");
       toast({
         title: "Perfil actualizado",
         description: "Tu información de perfil ha sido guardada correctamente.",

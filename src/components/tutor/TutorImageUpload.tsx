@@ -78,7 +78,7 @@ export function TutorImageUpload({
     setUploadingAvatar(true);
     try {
       const url = await uploadImage(file, "avatar");
-      
+
       const { error } = await supabase
         .from("tutors")
         .update({ avatar_url: url })
@@ -131,7 +131,7 @@ export function TutorImageUpload({
     setUploadingCover(true);
     try {
       const url = await uploadImage(file, "cover");
-      
+
       const { error } = await supabase
         .from("tutors")
         .update({ cover_image_url: url })
@@ -177,7 +177,7 @@ export function TutorImageUpload({
             <ImageIcon className="w-4 h-4" />
             Imagen de Portada
           </label>
-          <div 
+          <div
             className="relative w-full h-32 bg-muted rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors cursor-pointer"
             onClick={() => coverInputRef.current?.click()}
           >
