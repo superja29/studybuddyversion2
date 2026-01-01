@@ -32,11 +32,12 @@ export default function Tutors() {
       const { data, error } = await supabase
         .from("tutors")
         .select("*");
-      
+
       if (error) throw error;
 
       return data.map((t): TutorData => ({
         id: t.id,
+        slug: t.slug || t.id,
         name: t.name,
         avatar: t.avatar_url || "",
         country: t.location || "Unknown",
@@ -132,9 +133,8 @@ export default function Tutors() {
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtros
                 <ChevronDown
-                  className={`w-4 h-4 transition-transform ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
+                  className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""
+                    }`}
                 />
               </Button>
             </div>

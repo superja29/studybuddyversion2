@@ -305,6 +305,7 @@ export type Database = {
           name: string
           rating: number | null
           response_time: string | null
+          slug: string
           specialties: string[] | null
           total_lessons: number | null
           total_students: number | null
@@ -329,6 +330,7 @@ export type Database = {
           name: string
           rating?: number | null
           response_time?: string | null
+          slug?: string
           specialties?: string[] | null
           total_lessons?: number | null
           total_students?: number | null
@@ -353,6 +355,7 @@ export type Database = {
           name?: string
           rating?: number | null
           response_time?: string | null
+          slug?: string
           specialties?: string[] | null
           total_lessons?: number | null
           total_students?: number | null

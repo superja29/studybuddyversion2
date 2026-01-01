@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { OnlineStatus } from "./OnlineStatus";
 export interface TutorData {
   id: string;
+  slug: string;
   name: string;
   avatar: string;
   country: string;
@@ -30,7 +31,7 @@ interface TutorCardProps {
   tutor: TutorData;
   index?: number;
   onBook?: (tutorId: string) => void;
-  onViewProfile?: (tutorId: string) => void;
+  onViewProfile?: (tutorIdOrSlug: string) => void;
   isOnline?: boolean;
   lastOnlineAt?: string | null;
 }
@@ -75,9 +76,8 @@ export function TutorCard({ tutor, index = 0, onBook, onViewProfile, isOnline = 
 
         {/* Favorite button */}
         <button
-          className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors ${
-            isFavorite ? "text-coral" : ""
-          }`}
+          className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors ${isFavorite ? "text-coral" : ""
+            }`}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           onClick={handleFavoriteClick}
           disabled={toggling}
@@ -185,14 +185,14 @@ export function TutorCard({ tutor, index = 0, onBook, onViewProfile, isOnline = 
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onViewProfile?.(tutor.id)}
+                onClick={() => onViewProfile?.(tutor.slug || tutor.id)}
               >
                 Ver perfil
               </Button>
               <Button
                 variant="hero"
                 size="sm"
-                onClick={() => onBook?.(tutor.id)}
+                onClick={() => onBook?.(tutor.slug || tutor.id)}
               >
                 Reservar
               </Button>

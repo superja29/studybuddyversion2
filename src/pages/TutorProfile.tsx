@@ -43,27 +43,35 @@ const getEmbedUrl = (url: string) => {
 };
 
 export default function TutorProfile() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [tutor, setTutor] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Use the tutor ID from URL params
-  const tutorId = id;
+  // Use the tutor slug from URL params
+  const tutorId = tutor?.id; // We need the ID for favorites and presence, but we fetch by slug first
   const { isFavorite, toggling, toggleFavorite } = useFavorite(tutorId || "");
   const { isOnline, lastOnlineAt } = useTutorOnlineStatus(tutorId || "");
 
   useEffect(() => {
     async function fetchTutor() {
-      if (!tutorId) return;
+      if (!slug) return;
 
       try {
-        const { data, error } = await supabase
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+        const query = supabase
           .from("tutors")
-          .select("*")
-          .eq("id", tutorId)
-          .single();
+          .select("*");
+
+        if (isUuid) {
+          query.eq("id", slug);
+        } else {
+          query.eq("slug", slug);
+        }
+
+        const { data, error } = await query.single();
 
         if (error) throw error;
 
@@ -103,7 +111,7 @@ export default function TutorProfile() {
     }
 
     fetchTutor();
-  }, [tutorId]);
+  }, [slug]);
 
   if (loading) {
     return (
