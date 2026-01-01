@@ -303,6 +303,7 @@ export type Database = {
           last_online_at: string | null
           location: string | null
           name: string
+          native_language: string | null
           rating: number | null
           response_time: string | null
           slug: string
@@ -328,6 +329,7 @@ export type Database = {
           last_online_at?: string | null
           location?: string | null
           name: string
+          native_language?: string | null
           rating?: number | null
           response_time?: string | null
           slug?: string
@@ -353,6 +355,7 @@ export type Database = {
           last_online_at?: string | null
           location?: string | null
           name?: string
+          native_language?: string | null
           rating?: number | null
           response_time?: string | null
           slug?: string
@@ -405,6 +408,7 @@ export type Database = {
           trial_rate: number | null
           languages: string[]
           specialties: string[]
+          native_language?: string | null
         }
         Returns: void
       }

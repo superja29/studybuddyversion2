@@ -101,7 +101,10 @@ export default function TutorProfile() {
           hasVideo: !!data.video_url,
           videoUrl: data.video_url,
           education: data.education || [],
-          certifications: data.certifications || []
+          videoUrl: data.video_url,
+          education: data.education || [],
+          certifications: data.certifications || [],
+          nativeLanguage: data.native_language || data.languages?.[0] || null
         });
       } catch (error) {
         console.error("Error fetching tutor:", error);
@@ -336,12 +339,12 @@ export default function TutorProfile() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-wrap gap-4">
-                        {tutor.languages.map((lang, index) => (
+                        {tutor.languages.map((lang: string) => (
                           <div key={lang} className="flex items-center gap-2">
-                            <Badge variant={index === 0 ? "coral" : "outline"}>
+                            <Badge variant={lang === tutor.nativeLanguage ? "coral" : "outline"}>
                               {lang}
                             </Badge>
-                            {index === 0 && (
+                            {lang === tutor.nativeLanguage && (
                               <span className="text-xs text-muted-foreground">(Nativo)</span>
                             )}
                           </div>

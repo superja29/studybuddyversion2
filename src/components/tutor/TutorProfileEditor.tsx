@@ -29,6 +29,7 @@ const profileSchema = z.object({
   location: z.string().max(100, "La ubicación no puede superar los 100 caracteres").optional(),
   hourly_rate: z.coerce.number().min(1, "La tarifa debe ser mayor a 0"),
   trial_rate: z.coerce.number().min(0, "La tarifa de prueba no puede ser negativa").optional(),
+  native_language: z.string().optional(),
   video_url: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
 });
 
@@ -59,6 +60,7 @@ export function TutorProfileEditor({ tutor, onProfileUpdated }: TutorProfileEdit
       location: tutor.location || "",
       hourly_rate: Number(tutor.hourly_rate),
       trial_rate: tutor.trial_rate ? Number(tutor.trial_rate) : undefined,
+      native_language: tutor.native_language || "",
       video_url: (tutor as any).video_url || "",
     },
   });
@@ -70,6 +72,7 @@ export function TutorProfileEditor({ tutor, onProfileUpdated }: TutorProfileEdit
       location: tutor.location || "",
       hourly_rate: Number(tutor.hourly_rate),
       trial_rate: tutor.trial_rate ? Number(tutor.trial_rate) : undefined,
+      native_language: tutor.native_language || "",
       video_url: (tutor as any).video_url || "",
     });
   }, [tutor, form]);
@@ -134,6 +137,7 @@ export function TutorProfileEditor({ tutor, onProfileUpdated }: TutorProfileEdit
           location: data.location || null,
           hourly_rate: data.hourly_rate,
           trial_rate: data.trial_rate || null,
+          native_language: data.native_language || null,
           video_url: data.video_url || null,
           languages,
           specialties,

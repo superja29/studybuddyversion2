@@ -24,6 +24,7 @@ const tutorFormSchema = z.object({
   hourlyRate: z.number().min(5, "La tarifa mínima es $5").max(500, "La tarifa máxima es $500"),
   trialRate: z.number().min(0, "La tarifa de prueba no puede ser negativa").max(100, "La tarifa de prueba máxima es $100").optional(),
   languages: z.array(z.string()).min(1, "Debes agregar al menos un idioma"),
+  nativeLanguage: z.string().min(2, "Debes indicar tu idioma nativo"),
   specialties: z.array(z.string()).min(1, "Debes agregar al menos una especialidad"),
 });
 
@@ -56,6 +57,7 @@ export default function BecomeTutor() {
       hourlyRate: 25,
       trialRate: 5,
       languages: [],
+      nativeLanguage: "",
       specialties: [],
     },
   });
@@ -117,6 +119,7 @@ export default function BecomeTutor() {
         trial_rate: data.trialRate || null,
         languages: data.languages,
         specialties: data.specialties,
+        native_language: data.nativeLanguage,
       });
 
       if (error) throw error;
@@ -360,6 +363,23 @@ export default function BecomeTutor() {
                             </Button>
                           ))}
                         </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nativeLanguage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Idioma Nativo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ej: Español" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          El idioma que hablas como lengua materna.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
